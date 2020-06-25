@@ -8,7 +8,6 @@ import argparse
 
 counter = 0
 DRIVER_PATH = "C:\Program Files (x86)\chromedriver.exe"
-wd = webdriver.Chrome(DRIVER_PATH)
 
 
 def download_image(image_url, name):
@@ -36,6 +35,8 @@ def download_image(image_url, name):
 
 def get_links(keyword, num_of_images=50):
     global DRIVER_PATH
+    wd = webdriver.Chrome(DRIVER_PATH)
+
     url = f"https://www.google.com/search?q={keyword}&source=lnms&tbm=isch&sa=X&ved=2ahUKEwjQuNTC_pbqAhXtnuAKHVFaC84Q_AUoAXoECB4QAw&biw=1920&bih=975"
     global counter
 
@@ -64,12 +65,14 @@ def get_links(keyword, num_of_images=50):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download Images from Google for your dataset")
-    parser.add_argument("-k", "--search term", type=str, required=True, help="What you want images of")
-    parser.add_argument("-N", "--number of images", type=int, help="How many images you want")
-    keyword, num_of_images = parser.parse_args()
+    parser.add_argument("-k", "--search_term", type=str, required=True, help="What you want images of")
+    parser.add_argument("-N", "--num_of_images", type=int, help="How many images you want")
+    args = parser.parse_args()
 
-    start = time.time()
-    get_links(keyword, num_of_images)
-    end = time.time()
-    print(f"{num_of_images} images downloaded in {end - start} seconds.")
-
+    if not args.search_term:
+        parser.error("Please provide a search term")
+    else:
+        start = time.time()
+        get_links(args.search_term, args.num_of_images)
+        end = time.time()
+        print(f"{args.num_of_images} images downloaded in {end - start} seconds.")
