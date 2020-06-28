@@ -3,7 +3,6 @@ import requests
 import threading
 import time
 from selenium import webdriver
-import base64
 import argparse
 
 counter = 0
@@ -16,21 +15,10 @@ def download_image(image_url, name):
         r = requests.get(image_url)
         with open(name, "wb") as f:
             f.write(r.content)
-        print(f"Saved Image as:{name}, url:{image_url}")
+        print(f"Saved Image at:{name}, url:{image_url}")
         counter += 1
-    except ValueError as e:
-        try:
-            image_url = image_url.strip("data:image/jpeg")
-            img = base64.b64decode(image_url)
-            with open(name, "wb") as f:
-                f.write(img)
-            print(f"Saved Image as:{name}, base64:{image_url}")
-            counter += 1
-        except:
-            print(e, "ಠ_ಠ. Could not download image")
-
     except Exception as e:
-        print(e, "ಠ_ಠ. Could not download image")
+        print("ಠ_ಠ. Could not download image", e)
 
 
 def get_links(keyword, num_of_images=50):
@@ -45,7 +33,7 @@ def get_links(keyword, num_of_images=50):
 
     keyword = "+".join(keyword.split(" "))
 
-    path = f"./{keyword}_images"
+    path = f".\{keyword}_images"
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -54,9 +42,20 @@ def get_links(keyword, num_of_images=50):
 
     while counter < num_of_images:
         scroll()
+        time.sleep(1)
         images = wd.find_elements_by_css_selector("img.Q4LuWd")
         for image in images:
-            download_image(image.get_attribute("src"), os.path.join(path, f"{keyword}{counter}.png"))
+            try:
+                image.click()
+            except Exception as e:
+                continue
+            time.sleep(0.5)
+            print("made it")
+            actual_images = wd.find_elements_by_css_selector("img.n3VNCb")
+
+            for actual_image in actual_images:
+                if "http" in actual_image.get_attribute("src"):
+                    download_image(actual_image.get_attribute("src"), os.path.join(path, f"{keyword}{counter+1}.png"))
             if counter == num_of_images:
                 break
 
@@ -73,6 +72,7 @@ if __name__ == "__main__":
         parser.error("Please provide a search term")
     else:
         start = time.time()
+        print("hello")
         get_links(args.search_term, args.num_of_images)
         end = time.time()
         print(f"{args.num_of_images} images downloaded in {end - start} seconds.")
